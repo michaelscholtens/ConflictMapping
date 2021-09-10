@@ -3,6 +3,15 @@ import logging
 
 import azure.functions as func
 
+import pandas as pd
+import requests as rq
+import numpy as np
+import math
+
+from urllib.parse import quote_plus
+from sqlalchemy import create_engine, event
+import sqlalchemy
+
 
 def main(mytimer: func.TimerRequest) -> None:
     utc_timestamp = datetime.datetime.utcnow().replace(
@@ -56,6 +65,8 @@ def main(mytimer: func.TimerRequest) -> None:
             conn.close()
 
             acledEvents = events[events['timestamp'] > int(max)]
+
+            types = sqlcol(acledEvents)
 
             acledEvents.to_sql(table_name, engine, index=False, if_exists='append', schema='dbo', chunksize = 1000, dtype = types)
             break
