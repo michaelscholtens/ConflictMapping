@@ -55,16 +55,9 @@ def main(mytimer: func.TimerRequest) -> None:
     for i in range(2):
         try:
 
-            conn = engine.connect()
+            existing = pd.read_sql(table_name, engine)
 
-            trans = conn.begin()
-            max = conn.execute('SELECT MAX(timestamp)'
-                        'FROM acledEvents')
-            max = max.first()[0]
-
-            conn.close()
-
-            acledEvents = events[events['timestamp'] > int(max)]
+            acledEvents = acledEvents.merge(existing, how = 'right')
 
             types = sqlcol(acledEvents)
 
