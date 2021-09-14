@@ -23,7 +23,7 @@ def main(mytimer: func.TimerRequest) -> None:
     data = rq.get('https://api.acleddata.com/acled/read?key=' + acledKey + '&email=michael.scholtens@cartercenter.org&country=Myanmar&timestamp>=2021-02-01&limit=0')
     data = data.json()
 
-    events = pd.DataFrame(data['data'])
+    acledEvents = pd.DataFrame(data['data'])
 
     actorMap = pd.DataFrame()
     id = []
@@ -31,7 +31,7 @@ def main(mytimer: func.TimerRequest) -> None:
     t = []
     d = []
 
-    for row in events.iterrows():
+    for row in acledEvents.iterrows():
         id.append(row[1]['data_id'])
         s.append(row[1]['actor1'])
         t.append(row[1]['actor2'])
@@ -92,8 +92,6 @@ def main(mytimer: func.TimerRequest) -> None:
 
             actorMap.to_sql(table_name, engine, index=False, if_exists='replace', schema='dbo', chunksize = 1000, dtype = types)
 
-
-            break
         except: 
             continue
 
