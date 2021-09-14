@@ -90,7 +90,7 @@ def main(mytimer: func.TimerRequest) -> None:
 
             actorMap['date'] =  pd.to_datetime(actorMap['date'], format='%Y-%m-%d')
 
-            actorMap.to_sql(table_name, engine, index=False, if_exists='append', schema='dbo', chunksize = 1000, dtype = types)
+            actorMap.to_sql(table_name, engine, index=False, if_exists='replace', schema='dbo', chunksize = 1000, dtype = types)
 
 
             break
