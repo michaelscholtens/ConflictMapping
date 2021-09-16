@@ -69,18 +69,18 @@ def main(mytimer: func.TimerRequest) -> None:
     quoted = quote_plus(conn)
     engine = create_engine('mssql+pyodbc:///?odbc_connect={}'.format(quoted), fast_executemany = True)
     
+    table_name = 'acledEvents'
+
     for i in range(2):
         try:
 
             existing = pd.read_sql(table_name, engine)
 
-            acledEvents = acledEvents.merge(existing, how = 'right')
+            acledEvents = acledEvents.merge(existing, how = 'outer')
 
             acledEvents['event_date'] =  pd.to_datetime(acledEvents['event_date'], format='%Y-%m-%d')
 
             types = sqlcol(acledEvents)
-
-            table_name = 'acledEvents'
 
             acledEvents.to_sql(table_name, engine, index=False, if_exists='append', schema='dbo', chunksize = 1000, dtype = types)
 
