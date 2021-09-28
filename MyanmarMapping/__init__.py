@@ -17,14 +17,6 @@ def main(mytimer: func.TimerRequest) -> None:
     utc_timestamp = datetime.datetime.utcnow().replace(
         tzinfo=datetime.timezone.utc).isoformat()
 
-
-    acledKey = 'ZFU2-Xr9dvypqlvEKOHa'
-
-    data = rq.get('https://api.acleddata.com/acled/read?key=' + acledKey + '&email=michael.scholtens@cartercenter.org&country=Myanmar&timestamp>=2021-02-01&limit=0')
-    data = data.json()
-
-    acledEvents = pd.DataFrame(data['data'])
-
     def sqlcol(dfparam):    
     
         dtypedict = {}
@@ -52,17 +44,16 @@ def main(mytimer: func.TimerRequest) -> None:
         try:
             table_name = 'acledEvents'
 
-            existing = pd.read_sql(table_name, engine)
+            acledKey = 'ZFU2-Xr9dvypqlvEKOHa'
 
-            acledEvents['event_date'] =  pd.to_datetime(acledEvents['event_date'], format='%Y-%m-%d')
+            data = rq.get('https://api.acleddata.com/acled/read?key=' + acledKey + '&email=michael.scholtens@cartercenter.org&country=Myanmar&timestamp>=2021-02-01&limit=0')
+            data = data.json()
 
-            print(len(acledEvents))
-
-            acledEvents = acledEvents.merge(existing, how = 'outer', on = 'event_id_no_cnty')
+            acledEvents = pd.DataFrame(data['data'])
 
             types = sqlcol(acledEvents)
 
-            acledEvents.to_sql(table_name, engine, index=False, if_exists='append', schema='dbo', chunksize = 1000, dtype = types)
+            acledEvents.to_sql(table_name, engine, index=False, if_exists='replace', schema='dbo', chunksize = 1000, dtype = types)
 
             actorMap = pd.DataFrame()
             id = []
