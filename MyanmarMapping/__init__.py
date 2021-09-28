@@ -25,27 +25,6 @@ def main(mytimer: func.TimerRequest) -> None:
 
     acledEvents = pd.DataFrame(data['data'])
 
-    actorMap = pd.DataFrame()
-    id = []
-    s = []
-    t = []
-    d = []
-
-    for row in acledEvents.iterrows():
-        id.append(row[1]['data_id'])
-        s.append(row[1]['actor1'])
-        t.append(row[1]['actor2'])
-        d.append(row[1]['event_date'])
-        
-    actorMap['data_id'] = id
-    actorMap['date'] = d
-    actorMap['source'] = s
-    actorMap['target'] = t
-
-    actorMap = actorMap[actorMap['date']>='2021-02-01']
-
-    actorMap = actorMap[actorMap['target'] != '']
-
     def sqlcol(dfparam):    
     
         dtypedict = {}
@@ -68,21 +47,41 @@ def main(mytimer: func.TimerRequest) -> None:
     conn ='Driver={ODBC Driver 17 for SQL Server};Server=tcp:myanmarmapping.database.windows.net,1433;Database=myanmarMapping;Uid=tccuser;Pwd=2Legit2Quit;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;'
     quoted = quote_plus(conn)
     engine = create_engine('mssql+pyodbc:///?odbc_connect={}'.format(quoted), fast_executemany = True)
-    
-    table_name = 'acledEvents'
 
     for i in range(2):
         try:
+            table_name = 'acledEvents'
 
             existing = pd.read_sql(table_name, engine)
 
-            acledEvents = acledEvents.merge(existing, how = 'outer')
-
             acledEvents['event_date'] =  pd.to_datetime(acledEvents['event_date'], format='%Y-%m-%d')
+
+            acledEvents = acledEvents.merge(existing, how = 'outer', on = 'event_id_no_cnty')
 
             types = sqlcol(acledEvents)
 
             acledEvents.to_sql(table_name, engine, index=False, if_exists='append', schema='dbo', chunksize = 1000, dtype = types)
+
+            actorMap = pd.DataFrame()
+            id = []
+            s = []
+            t = []
+            d = []
+
+            for row in acledEvents.iterrows():
+                id.append(row[1]['data_id'])
+                s.append(row[1]['actor1'])
+                t.append(row[1]['actor2'])
+                d.append(row[1]['event_date'])
+                
+            actorMap['data_id'] = id
+            actorMap['date'] = d
+            actorMap['source'] = s
+            actorMap['target'] = t
+
+            actorMap = actorMap[actorMap['date']>='2021-02-01']
+
+            actorMap = actorMap[actorMap['target'] != '']
 
             table_name = 'actorMap'
 
