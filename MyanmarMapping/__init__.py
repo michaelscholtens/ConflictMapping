@@ -56,6 +56,8 @@ def main(mytimer: func.TimerRequest) -> None:
 
             acledEvents['event_date'] =  pd.to_datetime(acledEvents['event_date'], format='%Y-%m-%d')
 
+            print(len(acledEvents))
+
             acledEvents = acledEvents.merge(existing, how = 'outer', on = 'event_id_no_cnty')
 
             types = sqlcol(acledEvents)
