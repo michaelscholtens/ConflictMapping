@@ -107,6 +107,9 @@ def main(mytimer: func.TimerRequest) -> None:
 
             actorsUpdate = actors.append(actorsComplete, ignore_index = True)
             
+            #Some records are being duplicated, so this solves this behavior. However, this requires debugging.
+            actorsUpdate.drop_duplicates(inplace = True)
+
             #Write actors table to database
             actorsUpdate.to_sql(table_name, engine, index=False, if_exists='replace', schema='dbo', chunksize = 1000)
 
