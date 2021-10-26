@@ -115,6 +115,9 @@ def main(mytimer: func.TimerRequest) -> None:
 
             #The old list of actors and the new list of actors are combined to created the new complete list of actors.
             actorsUpdate = actors.append(actorsComplete, ignore_index = True)
+
+            #Add index to complete data
+            actorsUpdate['id'] = actorsUpdate.index
             
             #Determine datatypes
             types = sqlcol(actors)
