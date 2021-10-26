@@ -48,9 +48,13 @@ def main(mytimer: func.TimerRequest) -> None:
             table_name = 'acledEvents'
             #ACLED key for pulling data
             acledKey = 'ZFU2-Xr9dvypqlvEKOHa'
+            #Email address associated with ACLED key.
+            email = 'michael.scholtens@cartercenter.org'
+            #Country to pull data for.
+            country = 'Myanmar'
 
             #API request for ACLED data. See documentation at https://acleddata.com/resources/general-guides/
-            data = rq.get('https://api.acleddata.com/acled/read?key=' + acledKey + '&email=michael.scholtens@cartercenter.org&country=Myanmar&timestamp>=2021-02-01&limit=0')
+            data = rq.get('https://api.acleddata.com/acled/read?key=' + acledKey + '&email='+ email + '&country='+ country +'&limit=0')
             data = data.json()
 
             acledEvents = pd.DataFrame(data['data'])
@@ -112,6 +116,13 @@ def main(mytimer: func.TimerRequest) -> None:
 
             #Write actors table to database
             actorsUpdate.to_sql(table_name, engine, index=False, if_exists='replace', schema='dbo', chunksize = 1000)
+
+            # These SQL statements are required to create a primary key for the actors table, so it can be editable by the accompanying PowerApp.
+            with engine.connect() as con:
+                #This first stantement constrains the id column so it is a non-nullable field, which is required in order to set it as the primary key.
+                con.execute('ALTER TABLE actors ALTER COLUMN id int NOT NULL')
+                #This second statment sets the id column as the primary key.
+                con.execute('ALTER TABLE actors ADD PRIMARY KEY (id)')
 
 
         except: 
