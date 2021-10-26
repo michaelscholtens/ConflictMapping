@@ -101,21 +101,26 @@ def main(mytimer: func.TimerRequest) -> None:
             #This section of code reads the actors table from the database and identifies new actors from the new conflcit events and adds them to the table with the class "Not Yet Classified"
             actors = pd.read_sql(table_name, engine)
 
-            actorsClass = set(actors['Actors'])
-            actorsOld = set(acledEvents['actor1'])
-            actorsNew = list(actorsClass.symmetric_difference(actorsOld))
 
-            actorsComplete = pd.DataFrame(actorsNew, columns = ['Actors'])
+            #To find the new actors in the ACLED dataset, we take the set of the actors previously found in the data, and 'subtract' it from the set of the new actors. 
+            actorsOld = set(actors['Actors'])
+            actorsNew = set(acledEvents['actor1'])
+            actorsSet = list(actorsNew.difference(actorsOld))
 
+            #The new actors are placed in a data frame
+            actorsComplete = pd.DataFrame(actorsSet, columns = ['Actors'])
+
+            #All of the new actors are assigned a label of 'Not Yet Classfied'
             actorsComplete['Classification'] = "Not Yet Classified"
 
+            #The old list of actors and the new list of actors are combined to created the new complete list of actors.
             actorsUpdate = actors.append(actorsComplete, ignore_index = True)
             
-            #Some records are being duplicated, so this solves this behavior. However, this requires debugging.
-            actorsUpdate.drop_duplicates(inplace = True)
+            #Determine datatypes
+            types = sqlcol(actors)
 
             #Write actors table to database
-            actorsUpdate.to_sql(table_name, engine, index=False, if_exists='replace', schema='dbo', chunksize = 1000)
+            actorsUpdate.to_sql(table_name, engine, index=False, if_exists='replace', schema='dbo', chunksize = 1000, dtype = types)
 
             # These SQL statements are required to create a primary key for the actors table, so it can be editable by the accompanying PowerApp.
             with engine.connect() as con:
