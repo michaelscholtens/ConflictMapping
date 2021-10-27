@@ -45,7 +45,7 @@ def main(mytimer: func.TimerRequest) -> None:
     for i in range(2):
         try:
             #Table name for main conlfict events table 
-            table_name = 'acledEvents'
+            # table_name = 'acledEvents'
             #ACLED key for pulling data
             acledKey = 'ZFU2-Xr9dvypqlvEKOHa'
             #Email address associated with ACLED key.
@@ -58,8 +58,6 @@ def main(mytimer: func.TimerRequest) -> None:
             data = data.json()
 
             acledEvents = pd.DataFrame(data['data'])
-
-            types = sqlcol(acledEvents)
 
             #This next section of code produces the adjecency list for the 'Shape of Conflict' page of the Power Bi Dashboard.
             actorMap = pd.DataFrame()
@@ -129,7 +127,7 @@ def main(mytimer: func.TimerRequest) -> None:
                 con.execute('ALTER TABLE actors ADD PRIMARY KEY (id)')
 
             #This line of code creates columns in the 'acledEvents' table cased on a merge with the 'actors' table. These columns are a workaround for occlusion of the correct classifications on the map in Power BI. 
-            classed = acledEvents.merge(actors, left_on = 'actor1', right_on = 'Actors')
+            classed = acledEvents.merge(actorsUpdate, left_on = 'actor1', right_on = 'Actors')
 
             #Write data to database
             table_name = 'acledEvents'
