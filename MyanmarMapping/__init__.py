@@ -61,10 +61,6 @@ def main(mytimer: func.TimerRequest) -> None:
 
             types = sqlcol(acledEvents)
 
-            #Write data to database
-            acledEvents.to_sql(table_name, engine, index=False, if_exists='replace', schema='dbo', chunksize = 1000, dtype = types)
-
-
             #This next section of code produces the adjecency list for the 'Shape of Conflict' page of the Power Bi Dashboard.
             actorMap = pd.DataFrame()
             id = []
@@ -132,6 +128,18 @@ def main(mytimer: func.TimerRequest) -> None:
                 #This second statment sets the id column as the primary key.
                 con.execute('ALTER TABLE actors ADD PRIMARY KEY (id)')
 
+            #These 4 lines of code create a columns in the 'acledEvents' table cased on a merge with the 'actors' table. These columns are a workaround for occlusion of the correct classifications on the map in Power BI. 
+            classed = acledEvents.merge(actors, left_on = 'actor1', right_on = 'Actors')
+
+            classedLong = classed.groupby(['longitude', 'latitude'])['Classification'].agg(lambda x:x.tail(1))
+
+            classedFirst = classed.merge(classedLong, left_on = ['longitude', 'latitude'], right_on = ['longitude', 'latitude'])
+
+            classedFirst.rename(columns = {'Classification_x':'ClassificationTrue', 'Classification_y': 'ClassificationLocale'}, inplace = True)
+
+            #Write data to database
+            table_name = 'acledEvents'
+            classedFirst.to_sql(table_name, engine, index=False, if_exists='replace', schema='dbo', chunksize = 1000, dtype = types)
 
         except: 
             print("Failed")
