@@ -139,6 +139,7 @@ def main(mytimer: func.TimerRequest) -> None:
 
             #Write data to database
             table_name = 'acledEvents'
+            types = sqlcol(classedFirst)
             classedFirst.to_sql(table_name, engine, index=False, if_exists='replace', schema='dbo', chunksize = 1000, dtype = types)
 
         except: 
