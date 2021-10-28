@@ -36,6 +36,15 @@ def main(mytimer: func.TimerRequest) -> None:
 
         return dtypedict
 
+    def jitter(longitude, latitude):
+
+        delta_1 = np.random.rand(1,len(longitude))[0]/100
+        delta_2 = np.random.rand(1,len(latitude))[0]/100
+        newLongitude = np.add(np.array(longitude),delta_1)
+        newLatitude = np.add(np.array(latitude), delta_2)
+
+        return newLongitude, newLatitude
+
     #Connection String to target Database.
     conn ='Driver={ODBC Driver 17 for SQL Server};Server=tcp:myanmarmapping.database.windows.net,1433;Database=myanmarMapping;Uid=tccuser;Pwd=2Legit2Quit;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;'
     quoted = quote_plus(conn)
@@ -127,14 +136,22 @@ def main(mytimer: func.TimerRequest) -> None:
                 con.execute('ALTER TABLE actors ADD PRIMARY KEY (id)')
 
             #This line of code creates columns in the 'acledEvents' table cased on a merge with the 'actors' table. These columns are a workaround for occlusion of the correct classifications on the map in Power BI. 
-            classed = acledEvents.merge(actorsUpdate, left_on = 'actor1', right_on = 'Actors')
+            
+            classes = actorsUpdate.drop(columns=['Notes'])
+            classed = acledEvents.merge(classes, left_on = 'actor1', right_on = 'Actors')
 
             #Write data to database
             table_name = 'acledEvents'
             types = sqlcol(classed)
-            try:
-                classed.to_sql(table_name, engine, index=False, if_exists='replace', schema='dbo', chunksize = 1000, dtype = types)
-            except Exception as e: print(e)
+
+            #Testing a function to jitter results to prevent occlusion. 
+            newLongitude, newLatitude = jitter(pd.to_numeric(classed['longitude']), pd.to_numeric(classed['latitude']))
+
+            classed['longitude'] = newLongitude
+            classed['latitude'] = newLatitude
+
+            classed.to_sql(table_name, engine, index=False, if_exists='replace', schema='dbo', chunksize = 1000, dtype = types)
+
 
         except: 
             print("Failed")
