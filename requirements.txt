@@ -5,7 +5,6 @@
 azure-functions
 pandas
 numpy
-tweepy
 sqlalchemy
 pyodbc
 requests
