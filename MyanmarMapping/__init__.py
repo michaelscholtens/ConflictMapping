@@ -6,7 +6,7 @@ import azure.functions as func
 import pandas as pd
 import requests as rq
 import numpy as np
-import time
+import json
 
 from urllib.parse import quote_plus
 from sqlalchemy import create_engine, event
@@ -16,6 +16,12 @@ import sqlalchemy
 def main(mytimer: func.TimerRequest) -> None:
     utc_timestamp = datetime.datetime.utcnow().replace(
         tzinfo=datetime.timezone.utc).isoformat()
+
+    # Loading config file. 
+    file = open(r'config.json',)
+    config = json.load(file)
+    print(config)
+    print(config['country'])
 
     #Function used to ensure data types are stored correctly on ingestion to the SQL database.
     def sqlcol(dfparam):    
@@ -36,6 +42,7 @@ def main(mytimer: func.TimerRequest) -> None:
 
         return dtypedict
 
+    #This function is used to prevent overlap in PowerBI of locations geolocated to the exact same location. It will not move the location by more than 15.697 km, which is well within the geoprecision of the vast majority of ACLED data. 
     def jitter(longitude, latitude):
 
         delta_1 = np.random.rand(1,len(longitude))[0]/100
@@ -46,7 +53,7 @@ def main(mytimer: func.TimerRequest) -> None:
         return newLongitude, newLatitude
 
     #Connection String to target Database.
-    conn ='Driver={ODBC Driver 17 for SQL Server};Server=tcp:myanmarmapping.database.windows.net,1433;Database=myanmarMapping;Uid=tccuser;Pwd=2Legit2Quit;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;'
+    conn = config['connectionString']
     quoted = quote_plus(conn)
     engine = create_engine('mssql+pyodbc:///?odbc_connect={}'.format(quoted), fast_executemany = True)
 
@@ -56,17 +63,20 @@ def main(mytimer: func.TimerRequest) -> None:
             #Table name for main conlfict events table 
             # table_name = 'acledEvents'
             #ACLED key for pulling data
-            acledKey = 'ZFU2-Xr9dvypqlvEKOHa'
+            acledKey = config['acledKey']
             #Email address associated with ACLED key.
-            email = 'michael.scholtens@cartercenter.org'
+            email = config['email']
             #Country to pull data for.
-            country = 'Myanmar'
+            country = config['country']
 
             #API request for ACLED data. See documentation at https://acleddata.com/resources/general-guides/
             data = rq.get('https://api.acleddata.com/acled/read?key=' + acledKey + '&email='+ email + '&country='+ country +'&limit=0')
             data = data.json()
 
             acledEvents = pd.DataFrame(data['data'])
+
+            print('Initial Event Count:')
+            print(len(acledEvents))
 
             #This next section of code produces the adjecency list for the 'Shape of Conflict' page of the Power Bi Dashboard.
             actorMap = pd.DataFrame()
@@ -151,6 +161,8 @@ def main(mytimer: func.TimerRequest) -> None:
             classed['latitude'] = newLatitude
 
             classed.to_sql(table_name, engine, index=False, if_exists='replace', schema='dbo', chunksize = 1000, dtype = types)
+            print('Final Event Count:')
+            print(len(classed))
 
 
         except: 
