@@ -70,7 +70,7 @@ def main(mytimer: func.TimerRequest) -> None:
             country = config['country']
 
             #API request for ACLED data. See documentation at https://acleddata.com/resources/general-guides/
-            data = rq.get('https://api.acleddata.com/acled/read?key=' + acledKey + '&email='+ email + '&country='+ country +'&limit=0')
+            data = rq.get('https://api.acleddata.com/acled/read?key=' + acledKey + '&email='+ email + '&country='+ country +'&country_where=%3D&limit=0')
             data = data.json()
 
             acledEvents = pd.DataFrame(data['data'])
