@@ -81,4 +81,4 @@ When the drop-down area is selected, click on the 'Advanced' tab on the right ha
 
 There is also a Power BI template for visualizing the conflict data. This template was originally designed as a proof-of-concept in Myanmar. It is only a starring point and should serve as a base to create the most meaningful visual for your project! 
 
-To get the visuals to work, you must connect the SQL database and edit the country of interest in the GDELT query using Power Query. This can be accessed by right-clicking on the dataset on the right-hand side of the screen and selecting the 'edit query' option. 
+To get the visuals to work, you must edit the SQL queries to point to your database and edit the country of interest in the GDELT query using Power Query. This can be accessed by right-clicking on the dataset on the right-hand side of the screen and selecting the 'edit query' option. 
